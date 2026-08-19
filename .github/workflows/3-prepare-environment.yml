@@ -2,6 +2,7 @@ name: Step 3
 
 on:
   pull_request:
+    types: [opened, reopened, synchronize, closed]
     branches:
       - main
     paths:
