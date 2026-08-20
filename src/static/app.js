@@ -363,6 +363,72 @@ document.addEventListener("DOMContentLoaded", () => {
     return "academic";
   }
 
+  // Build sharing data for social buttons
+  function getShareData(activityName, details) {
+    const activityUrl = `${window.location.origin}${
+      window.location.pathname
+    }?activity=${encodeURIComponent(activityName)}`;
+    const activityText = `Check out "${activityName}" at Mergington High School! ${formatSchedule(
+      details
+    )}.`;
+
+    return {
+      title: `${activityName} | Mergington High School Activities`,
+      text: activityText,
+      url: activityUrl,
+    };
+  }
+
+  function getShareMessage(shareData) {
+    return `${shareData.text} ${shareData.url}`;
+  }
+
+  function escapeHtmlAttribute(value) {
+    return value
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  async function copyShareLink(shareData) {
+    const shareMessage = getShareMessage(shareData);
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(shareMessage);
+        showMessage("Share link copied to clipboard!", "success");
+      } else {
+        window.prompt("Copy and share this activity link:", shareMessage);
+        showMessage("Share link ready to copy.", "info");
+      }
+    } catch (error) {
+      console.error("Error copying share link:", error);
+      showMessage("Could not copy the share link. Please try again.", "error");
+    }
+  }
+
+  async function shareActivity(shareData) {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareData.title,
+          text: shareData.text,
+          url: shareData.url,
+        });
+        showMessage("Activity shared successfully!", "success");
+        return;
+      } catch (error) {
+        // User canceled sharing: do not show an error
+        if (error.name === "AbortError") {
+          return;
+        }
+      }
+    }
+
+    await copyShareLink(shareData);
+  }
+
   // Function to fetch activities from API with optional day and time filters
   async function fetchActivities() {
     // Show loading skeletons first
@@ -498,6 +564,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
+    const shareData = getShareData(name, details);
+    const shareMessage = getShareMessage(shareData);
+    const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(
+      shareMessage
+    )}`;
+    const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+      shareData.url
+    )}`;
+    const xShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+      shareData.text
+    )}&url=${encodeURIComponent(shareData.url)}`;
+    const safeActivityNameForAttr = escapeHtmlAttribute(name);
 
     // Create activity tag
     const tagHtml = `
@@ -569,6 +647,12 @@ document.addEventListener("DOMContentLoaded", () => {
         `
         }
       </div>
+      <div class="share-actions" aria-label="Share this activity">
+        <button class="share-button share-native" type="button" aria-label="Share activity: ${safeActivityNameForAttr}">Share</button>
+        <a class="share-button share-social" href="${whatsappShareUrl}" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp: ${safeActivityNameForAttr}">WhatsApp</a>
+        <a class="share-button share-social" href="${facebookShareUrl}" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook: ${safeActivityNameForAttr}">Facebook</a>
+        <a class="share-button share-social" href="${xShareUrl}" target="_blank" rel="noopener noreferrer" aria-label="Share on X: ${safeActivityNameForAttr}">X</a>
+      </div>
     `;
 
     // Add click handlers for delete buttons
@@ -585,6 +669,13 @@ document.addEventListener("DOMContentLoaded", () => {
           openRegistrationModal(name);
         });
       }
+    }
+
+    const shareButton = activityCard.querySelector(".share-native");
+    if (shareButton) {
+      shareButton.addEventListener("click", () => {
+        shareActivity(shareData);
+      });
     }
 
     activitiesList.appendChild(activityCard);
