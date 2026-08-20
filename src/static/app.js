@@ -379,8 +379,21 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  function getShareMessage(shareData) {
+    return `${shareData.text} ${shareData.url}`;
+  }
+
+  function escapeHtmlAttribute(value) {
+    return value
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
   async function copyShareLink(shareData) {
-    const shareMessage = `${shareData.text} ${shareData.url}`;
+    const shareMessage = getShareMessage(shareData);
     try {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(shareMessage);
@@ -552,17 +565,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
     const shareData = getShareData(name, details);
-    const shareMessage = `${shareData.text} ${shareData.url}`;
+    const shareMessage = getShareMessage(shareData);
     const whatsappShareUrl = `https://wa.me/?text=${encodeURIComponent(
       shareMessage
     )}`;
     const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
       shareData.url
-    )}&quote=${encodeURIComponent(shareData.text)}`;
+    )}`;
     const xShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
       shareData.text
     )}&url=${encodeURIComponent(shareData.url)}`;
-    const safeActivityNameForAttr = name.replace(/"/g, "&quot;");
+    const safeActivityNameForAttr = escapeHtmlAttribute(name);
 
     // Create activity tag
     const tagHtml = `
@@ -659,9 +672,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const shareButton = activityCard.querySelector(".share-native");
-    shareButton.addEventListener("click", () => {
-      shareActivity(shareData);
-    });
+    if (shareButton) {
+      shareButton.addEventListener("click", () => {
+        shareActivity(shareData);
+      });
+    }
 
     activitiesList.appendChild(activityCard);
   }
