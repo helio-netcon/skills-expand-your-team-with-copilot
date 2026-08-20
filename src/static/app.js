@@ -384,19 +384,11 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(shareMessage);
+        showMessage("Share link copied to clipboard!", "success");
       } else {
-        const tempInput = document.createElement("textarea");
-        tempInput.value = shareMessage;
-        tempInput.setAttribute("readonly", "");
-        tempInput.style.position = "absolute";
-        tempInput.style.left = "-9999px";
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand("copy");
-        document.body.removeChild(tempInput);
+        window.prompt("Copy and share this activity link:", shareMessage);
+        showMessage("Share link ready to copy.", "info");
       }
-
-      showMessage("Share link copied to clipboard!", "success");
     } catch (error) {
       console.error("Error copying share link:", error);
       showMessage("Could not copy the share link. Please try again.", "error");
@@ -570,6 +562,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const xShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
       shareData.text
     )}&url=${encodeURIComponent(shareData.url)}`;
+    const safeActivityNameForAttr = name.replace(/"/g, "&quot;");
 
     // Create activity tag
     const tagHtml = `
@@ -642,10 +635,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       </div>
       <div class="share-actions" aria-label="Share this activity">
-        <button class="share-button share-native" type="button">Share</button>
-        <a class="share-button share-social" href="${whatsappShareUrl}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
-        <a class="share-button share-social" href="${facebookShareUrl}" target="_blank" rel="noopener noreferrer">Facebook</a>
-        <a class="share-button share-social" href="${xShareUrl}" target="_blank" rel="noopener noreferrer">X</a>
+        <button class="share-button share-native" type="button" aria-label="Share activity: ${safeActivityNameForAttr}">Share</button>
+        <a class="share-button share-social" href="${whatsappShareUrl}" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp: ${safeActivityNameForAttr}">WhatsApp</a>
+        <a class="share-button share-social" href="${facebookShareUrl}" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook: ${safeActivityNameForAttr}">Facebook</a>
+        <a class="share-button share-social" href="${xShareUrl}" target="_blank" rel="noopener noreferrer" aria-label="Share on X: ${safeActivityNameForAttr}">X</a>
       </div>
     `;
 

@@ -219,6 +219,7 @@ section h3 {
 .share-social {
   background-color: #ffffff;
   color: var(--primary);
+  border-color: #c6cffd;
 }
 
 .share-social:hover {
